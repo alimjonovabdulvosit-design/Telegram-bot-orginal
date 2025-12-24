@@ -19,6 +19,14 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
+async def setup_bot_interface(bot: Bot):
+    try:
+        await bot.set_my_description("Ushbu bot SI ustoz telegram kanalining rasmiy boti hisoblanadi.")
+        await bot.set_my_short_description("SI ustoz telegram kanalining rasmiy boti.")
+        logger.info("Bot interface (description/about) updated successfully.")
+    except Exception as e:
+        logger.error(f"Failed to set bot interface: {e}")
+
 async def main():
     # Diagnostic logging
     logger.info(f"DATA_DIR is set to: {os.getenv('DATA_DIR')}")
@@ -42,6 +50,9 @@ async def main():
         bot = Bot(token=BOT_TOKEN)
         dp = Dispatcher()
         dp.include_router(router)
+        
+        # Setup bot interface
+        await setup_bot_interface(bot)
         
         logger.info("Bot is starting polling...")
         await dp.start_polling(bot, allowed_updates=["message", "callback_query", "chat_member", "chat_join_request"])

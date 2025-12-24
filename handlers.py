@@ -91,12 +91,11 @@ def get_admin_approval_kb(user_id: int):
 async def cmd_start(message: Message, bot: Bot):
     user_id = message.from_user.id
     
-    # Check if this is the channel's bot message
-    await message.answer("Ushbu bot SI ustoz kanalinining rasmiy boti hisoblanadi.")
-    
+    # Check if user is already a member
     if not await is_subscribed(bot, user_id):
         await message.answer(
-            "Botdan foydalanish uchun avval kanalimizga a'zo bo'ling yoki qo'shilish so'rovini yuboring:",
+            "Ushbu bot SI ustoz telegram kanalining rasmiy boti hisoblanadi. 🌟\n\n"
+            "Botdan foydalanish uchun avval quyidagi kanalga qo'shilish so'rovini yuboring va 'Tekshirish' tugmasini bosing:",
             reply_markup=get_check_sub_kb()
         )
         return
@@ -104,7 +103,8 @@ async def cmd_start(message: Message, bot: Bot):
     await db.add_user(user_id, message.from_user.username)
     await message.answer(
         f"Xush kelibsiz, {message.from_user.full_name}!\n\n"
-        "Kursga yozilish uchun quyidagi tugmani bosing:",
+        "Siz SI ustoz kanalining rasmiy a'zosiz. ✅\n"
+        "Kursga yozilishni xohlasangiz, quyidagi tugmani bosing:",
         reply_markup=get_subscribe_kb()
     )
 
