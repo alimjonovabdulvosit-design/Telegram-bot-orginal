@@ -11,7 +11,7 @@ DATA_DIR = os.getenv("DATA_DIR", "/app/data")
 # Export to environment for other modules
 os.environ["DATA_DIR"] = DATA_DIR
 
-REQUIRED_CHANNEL_ID = os.getenv("REQUIRED_CHANNEL_ID", "@si_ustoz")
+REQUIRED_CHANNEL_ID = int(os.getenv("REQUIRED_CHANNEL_ID", -1003581883170))
 REQUIRED_CHANNEL_URL = "https://t.me/si_ustoz"
 
 if not BOT_TOKEN:
