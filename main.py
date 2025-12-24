@@ -12,7 +12,6 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(levelname)s - %(name)s - %(message)s",
     handlers=[
-        logging.FileHandler("bot.log"),
         logging.StreamHandler(sys.stdout)
     ]
 )
@@ -20,28 +19,32 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 async def main():
+    # Check if BOT_TOKEN is set
+    if not BOT_TOKEN:
+        logger.error("CRITICAL ERROR: BOT_TOKEN is not set in Environment Variables!")
+        return
+
     # Initialize database
-    await init_db()
+    try:
+        await init_db()
+        logger.info("Database initialized successfully.")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}")
+        return
     
     # Initialize bot and dispatcher
-    bot = Bot(token=BOT_TOKEN)
-    dp = Dispatcher()
-    
-    dp.include_router(router)
-    
-    logger.info("Bot is starting...")
-    
-    while True:
-        try:
-            # Polling
-            await dp.start_polling(bot)
-        except Exception as e:
-            logger.error(f"Bot execution failed: {e}")
-            logger.info("Restarting in 5 seconds...")
-            await asyncio.sleep(5)
+    try:
+        bot = Bot(token=BOT_TOKEN)
+        dp = Dispatcher()
+        dp.include_router(router)
+        
+        logger.info("Bot is starting polling...")
+        await dp.start_polling(bot)
+    except Exception as e:
+        logger.error(f"Bot failed to start: {e}")
 
 if __name__ == "__main__":
     try:
         asyncio.run(main())
-    except KeyboardInterrupt:
-        logger.info("Bot stopped by user.")
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Bot stopped.")
