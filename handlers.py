@@ -67,16 +67,28 @@ async def cmd_start(message: Message, bot: Bot):
 
 @router.callback_query(F.data == "check_subscription")
 async def process_check_sub(callback: CallbackQuery, bot: Bot):
-    if await is_subscribed(bot, callback.from_user.id):
-        await callback.message.delete()
-        await db.add_user(callback.from_user.id, callback.from_user.username)
-        await callback.message.answer(
-            f"Rahmat! Obuna tasdiqlandi.\n\nXush kelibsiz, {callback.from_user.full_name}!\n\n"
-            "Kursga yozilish uchun quyidagi tugmani bosing:",
+    user_id = callback.from_user.id
+    subscribed = await is_subscribed(bot, user_id)
+    
+    if subscribed:
+        await callback.answer("✅ Obuna tasdiqlandi!")
+        # Proceed to next step
+        await db.add_user(user_id, callback.from_user.username)
+        
+        # Edit the existing message or delete and send new one
+        try:
+            await callback.message.delete()
+        except:
+            pass # Message might be already deleted
+            
+        await bot.send_message(
+            chat_id=user_id,
+            text=f"Rahmat! Obuna tasdiqlandi.\n\nXush kelibsiz, {callback.from_user.full_name}!\n\n"
+                 "Kursga yozilish uchun quyidagi tugmani bosing:",
             reply_markup=get_subscribe_kb()
         )
     else:
-        await callback.answer("❌ Siz hali kanalga a'zo emassiz!", show_alert=True)
+        await callback.answer("❌ Siz hali kanalga a'zo emassiz! Iltimos, avval a'zo bo'ling.", show_alert=True)
 
 @router.callback_query(F.data == "subscribe")
 async def process_subscribe(callback: CallbackQuery):
