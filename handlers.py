@@ -91,8 +91,12 @@ def get_admin_approval_kb(user_id: int):
 async def cmd_start(message: Message, bot: Bot):
     user_id = message.from_user.id
     
-    # Check if user is already a member
-    if not await is_subscribed(bot, user_id):
+    # Check if user is already registered in our bot
+    user_status = await db.get_user_status(user_id)
+    
+    # If they are new to the bot (not in DB), always show the join prompt
+    # even if they are already subbed to the channel.
+    if user_status is None:
         await message.answer(
             "Ushbu bot SI ustoz telegram kanalining rasmiy boti hisoblanadi. 🌟\n\n"
             "Botdan foydalanish uchun avval quyidagi kanalga qo'shilish so'rovini yuboring va 'Tekshirish' tugmasini bosing:",
@@ -100,7 +104,6 @@ async def cmd_start(message: Message, bot: Bot):
         )
         return
 
-    await db.add_user(user_id, message.from_user.username)
     await message.answer(
         f"Xush kelibsiz, {message.from_user.full_name}!\n\n"
         "Siz SI ustoz kanalining rasmiy a'zosiz. ✅\n"
