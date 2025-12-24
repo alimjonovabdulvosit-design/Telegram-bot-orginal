@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import sys
+import os
 import time
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN
