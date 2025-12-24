@@ -19,15 +19,19 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 async def main():
-    # Check if BOT_TOKEN is set
-    if not BOT_TOKEN:
-        logger.error("CRITICAL ERROR: BOT_TOKEN is not set in Environment Variables!")
+    # Diagnostic logging
+    logger.info(f"DATA_DIR is set to: {os.getenv('DATA_DIR')}")
+    if BOT_TOKEN:
+        masked_token = BOT_TOKEN[:5] + "..." + BOT_TOKEN[-5:]
+        logger.info(f"BOT_TOKEN is present: {masked_token}")
+    else:
+        logger.error("CRITICAL ERROR: BOT_TOKEN is missing!")
         return
 
     # Initialize database
     try:
         await init_db()
-        logger.info("Database initialized successfully.")
+        logger.info("Database initialization successful.")
     except Exception as e:
         logger.error(f"Failed to initialize database: {e}")
         return
