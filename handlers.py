@@ -27,6 +27,20 @@ def get_subscribe_kb():
     builder.row(InlineKeyboardButton(text="Kursga obuna bo'lish", callback_data="subscribe"))
     return builder.as_markup()
 
+def get_payment_done_kb():
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="To'lov qildim (skrinshot yuborish)", callback_data="payment_done"))
+    return builder.as_markup()
+
+# Admin Keyboards
+def get_admin_approval_kb(user_id: int):
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"approve_{user_id}"),
+        InlineKeyboardButton(text="❌ Rad etish", callback_data=f"reject_{user_id}")
+    )
+    return builder.as_markup()
+
 @router.message(Command("start"))
 async def cmd_start(message: Message, bot: Bot):
     user_id = message.from_user.id
