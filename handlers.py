@@ -1,5 +1,5 @@
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, PhotoSize, ChatJoinRequest
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, PhotoSize, ChatJoinRequest, ChatMemberUpdated
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from config import ADMIN_ID, CHANNEL_ID, REQUIRED_CHANNEL_ID
@@ -31,6 +31,30 @@ async def chat_join_handler(request: ChatJoinRequest):
     if str(request.chat.id) == str(REQUIRED_CHANNEL_ID) or request.chat.username == "si_ustoz":
         await db.set_join_request(request.from_user.id, True)
         logger.info(f"Join request received from {request.from_user.id}")
+
+@router.chat_member()
+async def chat_member_handler(event: ChatMemberUpdated, bot: Bot):
+    # Check if the event is from our required channel
+    if str(event.chat.id) == str(REQUIRED_CHANNEL_ID) or event.chat.username == "si_ustoz":
+        # Check if they just became a member
+        if event.new_chat_member.status in ["member", "administrator", "creator"]:
+            user_id = event.from_user.id
+            logger.info(f"User {user_id} joined the channel. Activating bot...")
+            
+            # Add to database
+            await db.add_user(user_id, event.from_user.username)
+            
+            # Send welcome message in private
+            try:
+                await bot.send_message(
+                    chat_id=user_id,
+                    text=f"Rahmat! Kanalimizga a'zo bo'lganingizni ko'rdik. 🌟\n\n"
+                         f"Hush kelibsiz, {event.from_user.full_name}!\n\n"
+                         "Mavjud kurslarimizdan birini tanlashingiz mumkin:",
+                    reply_markup=get_courses_kb()
+                )
+            except Exception as e:
+                logger.error(f"Could not send auto-welcome to {user_id}: {e}")
 
 # Keyboards
 def get_check_sub_kb():

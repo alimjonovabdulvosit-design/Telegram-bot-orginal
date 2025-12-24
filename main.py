@@ -44,7 +44,7 @@ async def main():
         dp.include_router(router)
         
         logger.info("Bot is starting polling...")
-        await dp.start_polling(bot)
+        await dp.start_polling(bot, allowed_updates=["message", "callback_query", "chat_member", "chat_join_request"])
     except Exception as e:
         logger.error(f"Bot failed to start: {e}")
 
