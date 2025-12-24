@@ -18,9 +18,7 @@ async def is_subscribed(bot: Bot, user_id: int) -> bool:
 # Keyboards
 def get_check_sub_kb():
     builder = InlineKeyboardBuilder()
-    # Note: User provided 3581883170, we'll try to provide a generic link or the ID based one
-    # If the channel is public, it would be better. For now using a placeholder.
-    builder.row(InlineKeyboardButton(text="📢 Kanalga a'zo bo'lish", url="https://t.me/+Qp69B13-lO1hMzEy")) # Example private link OR public if known
+    builder.row(InlineKeyboardButton(text="📢 Kanalga a'zo bo'lish", url="https://t.me/si_ustoz"))
     builder.row(InlineKeyboardButton(text="✅ Tekshirish", callback_data="check_subscription"))
     return builder.as_markup()
 
@@ -34,7 +32,7 @@ async def cmd_start(message: Message, bot: Bot):
     user_id = message.from_user.id
     
     # Check if this is the channel's bot message
-    await message.answer("Ushbu bot @al_ba_sit kanalining rasmiy boti hisoblanadi.")
+    await message.answer("Ushbu bot SI ustoz kanalinining rasmiy boti hisoblanadi.")
     
     if not await is_subscribed(bot, user_id):
         await message.answer(
