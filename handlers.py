@@ -30,6 +30,11 @@ def get_subscribe_kb():
     builder.row(InlineKeyboardButton(text="Kursga obuna bo'lish", callback_data="subscribe"))
     return builder.as_markup()
 
+def get_courses_kb():
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text="🤖 Prompt Engineering", callback_data="course_prompt"))
+    return builder.as_markup()
+
 def get_payment_done_kb():
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="To'lov qildim (skrinshot yuborish)", callback_data="payment_done"))
@@ -93,6 +98,16 @@ async def process_check_sub(callback: CallbackQuery, bot: Bot):
 @router.callback_query(F.data == "subscribe")
 async def process_subscribe(callback: CallbackQuery):
     await callback.message.edit_text(
+        "📚 Mavjud kurslarimiz:\n\n"
+        "Quyidagi kurslardan birini tanlang:",
+        reply_markup=get_courses_kb()
+    )
+    await callback.answer()
+
+@router.callback_query(F.data == "course_prompt")
+async def process_course_selection(callback: CallbackQuery):
+    await callback.message.edit_text(
+        "✅ Siz 'Prompt Engineering' kursini tanladingiz.\n\n"
         "To'lov malumotlari:\n\n"
         "💳 Karta: 9860 3501 4404 1398\n"
         "💰 Summa: 50 000 so'm\n\n"
