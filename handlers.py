@@ -1,9 +1,12 @@
 from aiogram import Router, F, Bot
-from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, PhotoSize
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, PhotoSize, ChatJoinRequest
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 from config import ADMIN_ID, CHANNEL_ID, REQUIRED_CHANNEL_ID
+import logging
 import database as db
+
+logger = logging.getLogger(__name__)
 
 router = Router()
 
@@ -13,10 +16,21 @@ async def is_subscribed(bot: Bot, user_id: int) -> bool:
         member = await bot.get_chat_member(chat_id=REQUIRED_CHANNEL_ID, user_id=user_id)
         # Log for debugging
         print(f"DEBUG: User {user_id} status in {REQUIRED_CHANNEL_ID} is {member.status}")
-        return member.status in ["member", "administrator", "creator", "restricted"]
+        if member.status in ["member", "administrator", "creator", "restricted"]:
+            return True
+        
+        # If not a member, check if they have a pending join request in DB
+        return await db.has_join_request(user_id)
     except Exception as e:
         print(f"CRITICAL: Subscription check failed for {user_id}: {e}")
-        return False
+        # Fallback to DB check
+        return await db.has_join_request(user_id)
+
+@router.chat_join_request()
+async def chat_join_handler(request: ChatJoinRequest):
+    if str(request.chat.id) == str(REQUIRED_CHANNEL_ID) or request.chat.username == "si_ustoz":
+        await db.set_join_request(request.from_user.id, True)
+        logger.info(f"Join request received from {request.from_user.id}")
 
 # Keyboards
 def get_check_sub_kb():
@@ -58,7 +72,7 @@ async def cmd_start(message: Message, bot: Bot):
     
     if not await is_subscribed(bot, user_id):
         await message.answer(
-            "Botdan foydalanish uchun avval kanalimizga a'zo bo'ling:",
+            "Botdan foydalanish uchun avval kanalimizga a'zo bo'ling yoki qo'shilish so'rovini yuboring:",
             reply_markup=get_check_sub_kb()
         )
         return

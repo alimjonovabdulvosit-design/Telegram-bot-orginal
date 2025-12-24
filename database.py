@@ -25,7 +25,8 @@ async def init_db():
             CREATE TABLE IF NOT EXISTS users (
                 user_id INTEGER PRIMARY KEY,
                 status TEXT DEFAULT 'free',
-                username TEXT
+                username TEXT,
+                has_requested_join INTEGER DEFAULT 0
             )
         """)
         await db.execute("""
@@ -59,3 +60,17 @@ async def create_payment_request(user_id, amount):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute("INSERT INTO payments (user_id, amount) VALUES (?, ?)", (user_id, amount))
         await db.commit()
+
+async def set_join_request(user_id, status: bool):
+    async with aiosqlite.connect(DB_NAME) as db:
+        val = 1 if status else 0
+        await db.execute("UPDATE users SET has_requested_join = ? WHERE user_id = ?", (val, user_id))
+        # If user doesn't exist yet, insert them
+        await db.execute("INSERT OR IGNORE INTO users (user_id, has_requested_join) VALUES (?, ?)", (user_id, val))
+        await db.commit()
+
+async def has_join_request(user_id):
+    async with aiosqlite.connect(DB_NAME) as db:
+        async with db.execute("SELECT has_requested_join FROM users WHERE user_id = ?", (user_id,)) as cursor:
+            row = await cursor.fetchone()
+            return bool(row[0]) if row else False
