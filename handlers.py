@@ -11,8 +11,10 @@ router = Router()
 async def is_subscribed(bot: Bot, user_id: int) -> bool:
     try:
         member = await bot.get_chat_member(chat_id=REQUIRED_CHANNEL_ID, user_id=user_id)
-        return member.status in ["member", "administrator", "creator"]
-    except Exception:
+        # Status can be creator, administrator, member, or restricted
+        return member.status in ["member", "administrator", "creator", "restricted"]
+    except Exception as e:
+        print(f"Subscription check error: {e}")
         return False
 
 # Keyboards
