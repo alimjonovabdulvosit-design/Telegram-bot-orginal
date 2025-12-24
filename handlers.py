@@ -2,39 +2,66 @@ from aiogram import Router, F, Bot
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton, PhotoSize
 from aiogram.filters import Command
 from aiogram.utils.keyboard import InlineKeyboardBuilder
-from config import ADMIN_ID, CHANNEL_ID
+from config import ADMIN_ID, CHANNEL_ID, REQUIRED_CHANNEL_ID
 import database as db
 
 router = Router()
 
-# User Keyboards
+# Subscription check helper
+async def is_subscribed(bot: Bot, user_id: int) -> bool:
+    try:
+        member = await bot.get_chat_member(chat_id=REQUIRED_CHANNEL_ID, user_id=user_id)
+        return member.status in ["member", "administrator", "creator"]
+    except Exception:
+        return False
+
+# Keyboards
+def get_check_sub_kb():
+    builder = InlineKeyboardBuilder()
+    # Note: User provided 3581883170, we'll try to provide a generic link or the ID based one
+    # If the channel is public, it would be better. For now using a placeholder.
+    builder.row(InlineKeyboardButton(text="📢 Kanalga a'zo bo'lish", url="https://t.me/+Qp69B13-lO1hMzEy")) # Example private link OR public if known
+    builder.row(InlineKeyboardButton(text="✅ Tekshirish", callback_data="check_subscription"))
+    return builder.as_markup()
+
 def get_subscribe_kb():
     builder = InlineKeyboardBuilder()
     builder.row(InlineKeyboardButton(text="Kursga obuna bo'lish", callback_data="subscribe"))
     return builder.as_markup()
 
-def get_payment_done_kb():
-    builder = InlineKeyboardBuilder()
-    builder.row(InlineKeyboardButton(text="To'lov qildim (skrinshot yuborish)", callback_data="payment_done"))
-    return builder.as_markup()
-
-# Admin Keyboards
-def get_admin_approval_kb(user_id: int):
-    builder = InlineKeyboardBuilder()
-    builder.row(
-        InlineKeyboardButton(text="✅ Tasdiqlash", callback_data=f"approve_{user_id}"),
-        InlineKeyboardButton(text="❌ Rad etish", callback_data=f"reject_{user_id}")
-    )
-    return builder.as_markup()
-
 @router.message(Command("start"))
-async def cmd_start(message: Message):
-    await db.add_user(message.from_user.id, message.from_user.username)
+async def cmd_start(message: Message, bot: Bot):
+    user_id = message.from_user.id
+    
+    # Check if this is the channel's bot message
+    await message.answer("Ushbu bot @al_ba_sit kanalining rasmiy boti hisoblanadi.")
+    
+    if not await is_subscribed(bot, user_id):
+        await message.answer(
+            "Botdan foydalanish uchun avval kanalimizga a'zo bo'ling:",
+            reply_markup=get_check_sub_kb()
+        )
+        return
+
+    await db.add_user(user_id, message.from_user.username)
     await message.answer(
         f"Xush kelibsiz, {message.from_user.full_name}!\n\n"
         "Kursga yozilish uchun quyidagi tugmani bosing:",
         reply_markup=get_subscribe_kb()
     )
+
+@router.callback_query(F.data == "check_subscription")
+async def process_check_sub(callback: CallbackQuery, bot: Bot):
+    if await is_subscribed(bot, callback.from_user.id):
+        await callback.message.delete()
+        await db.add_user(callback.from_user.id, callback.from_user.username)
+        await callback.message.answer(
+            f"Rahmat! Obuna tasdiqlandi.\n\nXush kelibsiz, {callback.from_user.full_name}!\n\n"
+            "Kursga yozilish uchun quyidagi tugmani bosing:",
+            reply_markup=get_subscribe_kb()
+        )
+    else:
+        await callback.answer("❌ Siz hali kanalga a'zo emassiz!", show_alert=True)
 
 @router.callback_query(F.data == "subscribe")
 async def process_subscribe(callback: CallbackQuery):
