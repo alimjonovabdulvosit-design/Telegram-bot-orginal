@@ -214,7 +214,7 @@ async def process_rejection(callback: CallbackQuery, bot: Bot):
     
     await bot.send_message(
         chat_id=user_id,
-        text="❌ To'lov tasdiqlanmadi. Iltimos, qaytadan urinib ko'ring yoki admin bilan bog'laning: t.me/al_ba_sit"
+        text="❌ To'lov tasdiqlanmadi. Iltimos, qaytadan urinib ko'ring yoki admin bilan bog'laning: @si_ustoz_admin"
     )
     
     await callback.message.edit_caption(
